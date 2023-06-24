@@ -22,15 +22,15 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
-// 实现
+	// 实现
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -171,72 +171,72 @@ void CPEToolDlg::OnStnClickedStaticTitleExplorer()
 void CPEToolDlg::OnBnClickedButtonSelectFile()
 {
 	// TODO: 在此添加控件通知处理程序代码
-  CString fileName=	Utils::selectFile(L"");
-  if (fileName.GetLength()>0)
-  {
-	  mEdtFilePath.SetWindowTextW(fileName.GetString());
-	  PEParser peParser(fileName);
+	CString fileName = Utils::selectFile(L"");
+	if (fileName.GetLength() > 0)
+	{
+		mEdtFilePath.SetWindowTextW(fileName.GetString());
+		PEParser peParser(fileName);
 
-	  peParser.parseHeaders();
-	  peParser.parseDirectories();
+		peParser.parseHeaders();
+		peParser.parseDirectories();
 
-	  IMAGE_DOS_HEADER dosHeader= peParser.getDosHeader();
-	  IMAGE_NT_HEADERS ntHeader=  peParser.getNtHeader();
-	  CString builder;
-	  //输出基址
-	  CString imageBaseStr;
-	  imageBaseStr.Format(L"ImageBase=0x%X\r\n", ntHeader.OptionalHeader.ImageBase);
-	  builder += imageBaseStr;
-	  //输出输入表
-	  builder += L"Import Table:\r\n";
-	  vector<ImportData> importData= peParser.getImportData();
-	  for (auto i= importData.begin();i!=importData.end();i++)
-	  {
-		  CString moduleInfo;
-		  CString moduleName = (*i).moudleName;
-		  moduleInfo.Format(L"	Module:%s\r\n", moduleName);
-		  vector<PEFunction> functions = (*i).functions;
-		  for (auto j=functions.begin();j!=functions.end();j++)
-		  {
-			  PEFunction function = *j;
-			  CString funciontInfo;
-			  //名字为空则代表以序号导入
-			  if (function.name.IsEmpty())
-			  {
-				  funciontInfo.Format(L"		0x%X:%d\r\n", function.address, function.ordinal);
-			  }
-			  //否则以函数名称导入
-			  else {
-				  funciontInfo.Format(L"		0x%X:%s\r\n", function.address, function.name);
-			  }
-			 
-			  moduleInfo += funciontInfo;
-		  }
-		  builder += moduleInfo;
-	  }
-	  //输出输出表
-	  builder += L"Export Table:\r\n";
-	  vector<ExportData> exportData = peParser.getExportData();
-	  for (auto i = exportData.begin(); i != exportData.end(); i++)
-	  {
-		  CString moduleInfo;
-		  CString moduleName = (*i).moudleName;
-		  moduleInfo.Format(L"	Module:%s\r\n", moduleName);
-		  vector<PEFunction> functions = (*i).functions;
-		  for (auto j = functions.begin(); j != functions.end(); j++)
-		  {
-			  PEFunction function = *j;
-			  CString funciontInfo;
-			  int index = std::distance(functions.begin(), j);
-			  funciontInfo.Format(L"	%d 0x%X:%s\r\n", index, function.address, function.name);
-			  moduleInfo += funciontInfo;
-		  }
-		  builder += moduleInfo;
-	  }
+		IMAGE_DOS_HEADER dosHeader = peParser.getDosHeader();
+		IMAGE_NT_HEADERS ntHeader = peParser.getNtHeader();
+		CString builder;
+		//输出基址
+		CString imageBaseStr;
+		imageBaseStr.Format(L"ImageBase=0x%X\r\n", ntHeader.OptionalHeader.ImageBase);
+		builder += imageBaseStr;
+		//输出输入表
+		builder += L"Import Table:\r\n";
+		vector<ImportData> importData = peParser.getImportData();
+		for (auto i = importData.begin(); i != importData.end(); i++)
+		{
+			CString moduleInfo;
+			CString moduleName = (*i).moudleName;
+			moduleInfo.Format(L"	Module:%s\r\n", moduleName);
+			vector<PEFunction> functions = (*i).functions;
+			for (auto j = functions.begin(); j != functions.end(); j++)
+			{
+				PEFunction function = *j;
+				CString funciontInfo;
+				//名字为空则代表以序号导入
+				if (function.name.IsEmpty())
+				{
+					funciontInfo.Format(L"		0x%X:%d\r\n", function.address, function.ordinal);
+				}
+				//否则以函数名称导入
+				else {
+					funciontInfo.Format(L"		0x%X:%s\r\n", function.address, function.name);
+				}
+
+				moduleInfo += funciontInfo;
+			}
+			builder += moduleInfo;
+		}
+		//输出输出表
+		builder += L"Export Table:\r\n";
+		vector<ExportData> exportData = peParser.getExportData();
+		for (auto i = exportData.begin(); i != exportData.end(); i++)
+		{
+			CString moduleInfo;
+			CString moduleName = (*i).moudleName;
+			moduleInfo.Format(L"	Module:%s\r\n", moduleName);
+			vector<PEFunction> functions = (*i).functions;
+			for (auto j = functions.begin(); j != functions.end(); j++)
+			{
+				PEFunction function = *j;
+				CString funciontInfo;
+				int index = std::distance(functions.begin(), j);
+				funciontInfo.Format(L"	%d 0x%X:%s\r\n", index, function.address, function.name);
+				moduleInfo += funciontInfo;
+			}
+			builder += moduleInfo;
+		}
 
 
-	  mEdtPEContent.SetWindowTextW(builder.GetString());
-  }
+		mEdtPEContent.SetWindowTextW(builder.GetString());
+	}
 
 
 }

@@ -10,17 +10,17 @@ bool PEParser::isPEFile()
 	}
 	//判断是否为MZ
 	auto pDosHeader = (PIMAGE_DOS_HEADER)(mImageBase);
-	if (pDosHeader->e_magic!=IMAGE_DOS_SIGNATURE)
+	if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
 	{
 		return false;
 	}
 	//判断是否为PE格式
 	auto pNtHeader = (PIMAGE_NT_HEADERS)(mImageBase + pDosHeader->e_lfanew);
-	if (pNtHeader->Signature!=IMAGE_NT_SIGNATURE)
+	if (pNtHeader->Signature != IMAGE_NT_SIGNATURE)
 	{
 		return false;
 	}
-    return true;
+	return true;
 }
 
 bool PEParser::parseHeaders()
@@ -51,7 +51,7 @@ bool PEParser::parseHeaders()
 		++pSectionHeader;
 	}
 
-    return true;
+	return true;
 }
 
 bool PEParser::parseDirectories()
@@ -65,7 +65,7 @@ bool PEParser::parseDirectories()
 	PIMAGE_DATA_DIRECTORY pDataDirectory = mNtHeader.OptionalHeader.DataDirectory;
 	for (size_t i = 0; ; i++)
 	{
-		if (pDataDirectory->VirtualAddress==0)
+		if (pDataDirectory->VirtualAddress == 0)
 		{
 			++pDataDirectory;
 			continue;
@@ -74,20 +74,20 @@ bool PEParser::parseDirectories()
 		auto ntBase = mImageBase + mDosHeader.e_lfanew;
 		auto sectionCount = mNtHeader.FileHeader.NumberOfSections;
 		auto pSectionHeader = IMAGE_FIRST_SECTION((PIMAGE_NT_HEADERS)ntBase);
-		
+
 		//定位所在区块，计算文件偏移
 		int sectionLoc = -1;
 		for (size_t j = 0; j < sectionCount; j++)
 		{
 			auto sectionHeader = pSectionHeader + j;
 			//小于一个区块的起始位置就表示当前区块在前一个区块中
-			if (pDataDirectory->VirtualAddress< sectionHeader->VirtualAddress)
+			if (pDataDirectory->VirtualAddress < sectionHeader->VirtualAddress)
 			{
 				sectionLoc = j - 1;
 				break;
 			}
 		}
-		if (sectionLoc==-1)
+		if (sectionLoc == -1)
 		{
 			break;
 		}
@@ -99,41 +99,41 @@ bool PEParser::parseDirectories()
 		DWORD fileOffset = pDataDirectory->VirtualAddress - delta;
 
 		//0、输出表
-		if (i==IMAGE_DIRECTORY_ENTRY_EXPORT)
+		if (i == IMAGE_DIRECTORY_ENTRY_EXPORT)
 		{
-			
-			PIMAGE_EXPORT_DIRECTORY pExportDirectory =(PIMAGE_EXPORT_DIRECTORY)(mImageBase + fileOffset);
-			
-				int numberOfFunction = pExportDirectory->NumberOfFunctions;
-				int numberOfName = pExportDirectory->NumberOfNames;
 
-				DWORD* addressOfFunctions = (DWORD*)(mImageBase + (pExportDirectory->AddressOfFunctions - delta));
-				DWORD* addressOfNames = (DWORD*)(mImageBase + (pExportDirectory->AddressOfNames - delta));
-				WORD* addressOfNameOrdinals = (WORD*)(mImageBase + (pExportDirectory->AddressOfNameOrdinals - delta));
-				
-				ExportData exportData;
-				exportData.moudleName = CString(mImageBase + (pExportDirectory->Name - delta));
-				//先把所有的函数地址都导出
-				for (size_t i = 0; i < numberOfFunction; i++)
-				{
-					PEFunction peFunction;
-					peFunction.address = addressOfFunctions[i];
-					exportData.functions.push_back(peFunction);
-				}
-				//然后在导出名称
-				for (size_t i = 0; i < numberOfName; i++)
-				{
-					WORD ordinal = addressOfNameOrdinals[i];
-					exportData.functions[ordinal].name = CString(mImageBase + (addressOfNames[i] - delta));
-				}
+			PIMAGE_EXPORT_DIRECTORY pExportDirectory = (PIMAGE_EXPORT_DIRECTORY)(mImageBase + fileOffset);
 
-				mExportDirectory.push_back(exportData);
-			
-			
-			
+			int numberOfFunction = pExportDirectory->NumberOfFunctions;
+			int numberOfName = pExportDirectory->NumberOfNames;
+
+			DWORD* addressOfFunctions = (DWORD*)(mImageBase + (pExportDirectory->AddressOfFunctions - delta));
+			DWORD* addressOfNames = (DWORD*)(mImageBase + (pExportDirectory->AddressOfNames - delta));
+			WORD* addressOfNameOrdinals = (WORD*)(mImageBase + (pExportDirectory->AddressOfNameOrdinals - delta));
+
+			ExportData exportData;
+			exportData.moudleName = CString(mImageBase + (pExportDirectory->Name - delta));
+			//先把所有的函数地址都导出
+			for (size_t i = 0; i < numberOfFunction; i++)
+			{
+				PEFunction peFunction;
+				peFunction.address = addressOfFunctions[i];
+				exportData.functions.push_back(peFunction);
+			}
+			//然后在导出名称
+			for (size_t i = 0; i < numberOfName; i++)
+			{
+				WORD ordinal = addressOfNameOrdinals[i];
+				exportData.functions[ordinal].name = CString(mImageBase + (addressOfNames[i] - delta));
+			}
+
+			mExportDirectory.push_back(exportData);
+
+
+
 		}
 		//1、输入表
-		else if (i==IMAGE_DIRECTORY_ENTRY_IMPORT)
+		else if (i == IMAGE_DIRECTORY_ENTRY_IMPORT)
 		{
 			PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)(mImageBase + fileOffset);
 			//遍历输入表，每个IMAGE_IMPORT_DESCRIPTOR结构对应一个动态链接库
@@ -142,7 +142,7 @@ bool PEParser::parseDirectories()
 
 				DWORD offsetToOriginalFirstThunk = pImportDescriptor->OriginalFirstThunk - delta;
 				DWORD offsetToFirstThunk = pImportDescriptor->FirstThunk - delta;
-				PIMAGE_THUNK_DATA pOriginalThunkData =(PIMAGE_THUNK_DATA)(mImageBase + offsetToOriginalFirstThunk);
+				PIMAGE_THUNK_DATA pOriginalThunkData = (PIMAGE_THUNK_DATA)(mImageBase + offsetToOriginalFirstThunk);
 				PIMAGE_THUNK_DATA pThunkData = (PIMAGE_THUNK_DATA)(mImageBase + offsetToFirstThunk);
 
 				ImportData importData;
@@ -153,7 +153,7 @@ bool PEParser::parseDirectories()
 				for (;;)
 				{
 					//判断OriginalThunk是否结束,数组以一个内容为0的IMAGE_THUNK_DATA结构结束
-					if (*(ULONGLONG*)pOriginalThunkData==0)
+					if (*(ULONGLONG*)pOriginalThunkData == 0)
 					{
 						break;
 					}
@@ -182,27 +182,27 @@ bool PEParser::parseDirectories()
 			}
 		}
 		//2、资源表
-		else if (i==IMAGE_DIRECTORY_ENTRY_RESOURCE)
+		else if (i == IMAGE_DIRECTORY_ENTRY_RESOURCE)
 		{
 
 		}
 		//3、异常表
-		else if (i==IMAGE_DIRECTORY_ENTRY_EXCEPTION)
+		else if (i == IMAGE_DIRECTORY_ENTRY_EXCEPTION)
 		{
 
 		}
 		//4、安全表
-		else if (i==IMAGE_DIRECTORY_ENTRY_SECURITY)
+		else if (i == IMAGE_DIRECTORY_ENTRY_SECURITY)
 		{
 
 		}
 		//5、重定位表
-		else if (i==IMAGE_DIRECTORY_ENTRY_BASERELOC)
+		else if (i == IMAGE_DIRECTORY_ENTRY_BASERELOC)
 		{
 
 		}
 		//6、调试表
-		else if (i==IMAGE_DIRECTORY_ENTRY_DEBUG)
+		else if (i == IMAGE_DIRECTORY_ENTRY_DEBUG)
 		{
 
 		}
@@ -220,37 +220,37 @@ bool PEParser::parseDirectories()
 		}
 #endif // X64
 		//8、Global Ptr
-		else if (i==IMAGE_DIRECTORY_ENTRY_GLOBALPTR)
+		else if (i == IMAGE_DIRECTORY_ENTRY_GLOBALPTR)
 		{
 
 		}
 		//9、TLS
-		else if (i==IMAGE_DIRECTORY_ENTRY_TLS)
+		else if (i == IMAGE_DIRECTORY_ENTRY_TLS)
 		{
 
 		}
 		//10、load config
-		else if (i==IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG)
+		else if (i == IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG)
 		{
 
 		}
 		//11、bound import
-		else if (i==IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT)
+		else if (i == IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT)
 		{
 
 		}
 		//12、IAT
-		else if (i==IMAGE_DIRECTORY_ENTRY_IAT)
+		else if (i == IMAGE_DIRECTORY_ENTRY_IAT)
 		{
 
 		}
 		//13、Delay import
-		else if (i==IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT)
+		else if (i == IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT)
 		{
 
 		}
 		//14、COM descriptor
-		else if (i==IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR)
+		else if (i == IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR)
 		{
 
 		}
